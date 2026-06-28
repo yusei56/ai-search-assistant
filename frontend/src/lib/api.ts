@@ -1,6 +1,14 @@
 // Thin client for the AI Search backend.
+function defaultApiBase() {
+  if (typeof window === "undefined") return "http://127.0.0.1:8000";
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "";
+}
+
 export const API_BASE = (
-  process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000"
+  process.env.NEXT_PUBLIC_API_BASE || defaultApiBase()
 ).replace(/\/$/, "");
 
 const SEARCH_TIMEOUT_MS = 20_000;

@@ -153,3 +153,92 @@ https://github.com/yusei56/ai-search-assistant
 
 ### 问题 4：本地搜索体验偶尔卡住
 
+本地验收时发现，主 Demo 点击搜索后有时会长时间停留在加载状态；搜索页下方的推荐搜索/相关搜索也存在点击反馈不稳定的问题。进一步排查后，主要原因有三类：
+
+1. 前端在提交搜索后同时请求 `/api/search` 和 `/api/overview`。其中 AI Overview 是 SSE 流式接口，后端也会再次执行检索。冷启动或 CPU 较慢时，两类请求叠加，用户会感觉搜索结果“卡住”。
+2. 本地 Windows + WSL 环境下，`localhost`、`127.0.0.1`、Next.js dev server 的访问源限制会影响浏览器资源加载，导致页面表现不稳定。
+3. 搜索建议和推荐按钮需要明确声明为普通按钮，并在点击时避免失焦逻辑吞掉事件。
+
+解决方案：
+
+- 将前端逻辑调整为“先返回搜索结果，再启动 AI Overview”，保证用户先看到结果卡片。
+- 为 `/api/search` 和 `/api/suggest` 增加超时控制，失败时显示明确错误提示，而不是一直 loading。
+- 为 SSE AI Overview 增加超时和关闭逻辑，避免流式连接异常时界面无法恢复。
+- 后端增加查询向量缓存，减少重复搜索时的 embedding 计算开销。
+- 将本地默认 API 地址改为 `http://127.0.0.1:8000`，减少 Windows/WSL 下 `localhost` 解析差异。
+- 在 Next.js 配置中允许 `127.0.0.1` dev origin，避免开发模式下资源请求被拦截。
+- 给推荐搜索和搜索建议按钮补充 `type="button"` 以及点击保护逻辑，确保点击后能稳定触发搜索。
+- widget 和 inline 页面同步增加请求超时、AI Overview 延后启动、错误提示和本地地址修正。
+
+修复后重新验证：
+
+- 主 Demo 搜索可以正常返回结果。
+- 推荐搜索和相关搜索可以点击并发起新查询。
+- widget 预览页和 inline 预览页可以正常打开。
+- 后端搜索接口在模型加载完成后保持秒级响应。
+
+## 7. 本地运行方式
+
+后端：
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+前端：
+
+```bash
+cd frontend
+npm install
+npm run dev -- -H 0.0.0.0 -p 3000
+```
+
+widget 预览：
+
+```bash
+cd widget
+npm install
+npm run build
+python3 -m http.server 8010 --bind 0.0.0.0
+```
+
+本地访问：
+
+- 主 Demo：`http://localhost:3000/?q=ginseng%20quality%20testing`
+- 后端健康检查：`http://localhost:8000/api/health`
+- 浮动 widget 预览：`http://localhost:8010/`
+- inline 页面预览：`http://localhost:8010/inline.html?q=ginseng%20quality%20testing`
+
+## 8. 验证情况
+
+已完成以下验证：
+
+```bash
+cd frontend && npm run lint
+cd frontend && npm run build
+cd widget && npm run build
+cd widget && node --check dist/ai-search-widget.js dist/ai-search-inline.js dist/ai-search-bridge.js
+cd backend && python -m compileall app
+```
+
+运行验证：
+
+- `/api/health` 正常返回。
+- `/api/search?q=ginseng quality testing` 返回相关结果。
+- 无效查询返回空结果而不是大量无关结果。
+- 主 Demo、浮动 widget 预览、inline 页面均可在本地访问。
+
+## 9. 部署说明
+
+仓库包含 `deploy/`、Dockerfile、Caddyfile 和 `DEPLOY.md`，可部署到支持 Docker 的服务器上，并通过 HTTPS 对外提供：
+
+- Next.js Demo 页面。
+- FastAPI 搜索 API。
+- widget / bridge / inline 三个嵌入脚本。
+
+GitHub Pages 只能托管静态页面，不能运行 FastAPI 后端、模型索引和 SSE 流式接口。因此完整 Demo 需要部署到 VPS、Render、Railway、Fly.io 等支持后端服务的平台。

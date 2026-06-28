@@ -1,0 +1,16 @@
+{
+  "name": "ai-search-widget",
+  "version": "0.1.0",
+  "description": "Embeddable AI search widget (Shadow DOM, zero-dependency).",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:widget && npm run build:bridge && npm run build:inline",
+    "build:widget": "esbuild src/widget.ts --bundle --minify --format=iife --outfile=dist/ai-search-widget.js",
+    "build:bridge": "esbuild src/bridge.ts --bundle --minify --format=iife --outfile=dist/ai-search-bridge.js",
+    "build:inline": "esbuild src/inline.ts --bundle --minify --format=iife --outfile=dist/ai-search-inline.js",
+    "dev": "npm run build && esbuild src/widget.ts src/bridge.ts src/inline.ts --bundle --format=iife --outdir=dist --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

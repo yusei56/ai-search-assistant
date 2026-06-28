@@ -1,0 +1,22 @@
+# Caddy auto-provisions and renews TLS for PUBLIC_DOMAIN (Let's Encrypt).
+{$PUBLIC_DOMAIN} {
+	encode gzip
+
+	# Embeddable widget scripts, served cross-origin for the WordPress site.
+	handle /ai-search*.js {
+		root * /srv/widget
+		header Access-Control-Allow-Origin "*"
+		header Cache-Control "public, max-age=3600"
+		file_server
+	}
+
+	# Backend API + SSE (Caddy streams reverse_proxy responses, no buffering).
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# Standalone Next.js demo.
+	handle {
+		reverse_proxy frontend:3000
+	}
+}

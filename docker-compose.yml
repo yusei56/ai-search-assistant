@@ -1,0 +1,36 @@
+# One-command demo:  docker compose up --build
+#
+# The backend builds the search index on first boot (needs network to the WP
+# site + downloads the bge-m3 model once into the cached volume). Set your LLM
+# key in backend/.env to enable AI Overviews.
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      # bind-friendly defaults; override in backend/.env
+      INDEX_DIR: /app/data/index
+    volumes:
+      - index-data:/app/data
+      - hf-cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # NEXT_PUBLIC_* is inlined at build time; the browser hits the published
+        # backend port on the host, so localhost works for a local demo.
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  index-data:
+  hf-cache:

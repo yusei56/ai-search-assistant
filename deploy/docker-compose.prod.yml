@@ -1,0 +1,55 @@
+# Production stack: one domain, auto-HTTPS via Caddy.
+#   /            -> Next.js demo (frontend)
+#   /api/*       -> FastAPI backend (incl. SSE)
+#   /ai-search*.js -> embeddable widget/bridge/inline scripts (CORS-open)
+#
+# Deploy:  cp .env.example .env && edit  →  ./deploy.sh
+name: ai-search
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../widget/dist:/srv/widget:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+
+  backend:
+    build:
+      context: ../backend
+    restart: unless-stopped
+    env_file:
+      - ../backend/.env
+    environment:
+      INDEX_DIR: /app/data/index
+    volumes:
+      - index-data:/app/data
+      - hf-cache:/root/.cache/huggingface
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        # Baked into the client bundle at build time. Same domain as the API.
+        NEXT_PUBLIC_API_BASE: ${PUBLIC_URL:?set PUBLIC_URL in deploy/.env}
+    restart: unless-stopped
+    expose:
+      - "3000"
+
+volumes:
+  caddy_data:
+  caddy_config:
+  index-data:
+  hf-cache:

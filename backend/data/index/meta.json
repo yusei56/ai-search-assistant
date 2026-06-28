@@ -1,0 +1,27 @@
+{
+  "built_at": "2026-06-25T17:26:21.116088+00:00",
+  "source": "https://test-site.141154.cd-web.org",
+  "embedding_backend": "bge-m3",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "dim": 384,
+  "doc_count": 80,
+  "chunk_count": 483,
+  "categories": [
+    "Analysis of Effective Constituents of Herbal Medicines",
+    "Back to School Promotion 2024",
+    "Back to School Promotion 2025",
+    "Cookie Policy",
+    "Gratitude and Growth for Thanksgiving 2024",
+    "HOLIDAY GREETINGS 2023",
+    "HOLIDAY GREETINGS 2024",
+    "Herbal Rapid Analysis",
+    "Isolation and Purification of Herbal Components",
+    "Knowledge Center",
+    "Pharmacological Analysis of Herbal Medicines",
+    "Privacy Policy",
+    "Promotion",
+    "Quality Testing of Herbal Medicines",
+    "Technical Information",
+    "Thanksgiving Sale 2025"
+  ]
+}

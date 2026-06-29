@@ -166,6 +166,14 @@ export default function Home() {
     window.history.replaceState(null, "", "/");
   };
 
+  const runSearch = useCallback(
+    (nextQuery: string) => {
+      setInput(nextQuery);
+      onSubmit(nextQuery);
+    },
+    [onSubmit]
+  );
+
   const hasSearched = query !== "";
   const initialLoading = loading && results.length === 0;
   const relatedSearches = hasSearched ? relatedSearchesFor(query) : [];
@@ -191,17 +199,17 @@ export default function Home() {
           <SearchBar value={input} onChange={setInput} onSubmit={onSubmit} />
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             {EXAMPLES.map((ex) => (
-              <button
+              <a
                 key={ex}
-                type="button"
-                onClick={() => {
-                  setInput(ex);
-                  onSubmit(ex);
+                href={`/?q=${encodeURIComponent(ex)}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  runSearch(ex);
                 }}
                 className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 transition hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-700"
               >
                 {ex}
-              </button>
+              </a>
             ))}
           </div>
         </div>
@@ -259,17 +267,17 @@ export default function Home() {
                 Related searches
               </span>
               {relatedSearches.map((item) => (
-                <button
+                <a
                   key={item}
-                  type="button"
-                  onClick={() => {
-                    setInput(item);
-                    onSubmit(item);
+                  href={`/?q=${encodeURIComponent(item)}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    runSearch(item);
                   }}
                   className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 transition hover:border-brand-300 hover:text-brand-700"
                 >
                   {item}
-                </button>
+                </a>
               ))}
             </div>
           )}
